@@ -38,11 +38,12 @@ export AWS_SESSION_TOKEN=
 ```sh
 # from OSD root folder
 cd plugins
+git clone https://github.com/opensearch-project/dashboards-assistant
+(cd dashboards-assistant && yarn setup)
+
 # example with security plugin
 git clone --depth 1 --branch $VERSION https://github.com/opensearch-project/security-dashboards-plugin.git
-cd dashboards-assistant
-# NOTE: this will change OSD to be version 2.11.0 for dev purposes
-yarn setup
+
 cd ../../
 yarn osd bootstrap
 ```

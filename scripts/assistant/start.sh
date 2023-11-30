@@ -8,6 +8,10 @@ set -e
 . scripts/assistant/utils.sh
 . scripts/assistant/add_model.sh
 
+RED_COLOR='\033[0;31m'
+GREEN_COLOR='\033[0;32m'
+NO_COLOR='\033[0m'
+
 function usage() {
     echo ""
     echo "This script is used to run OpenSearch Assistant"
@@ -53,8 +57,8 @@ done
 [ -z "$SECRET_ACCESS_KEY" ] && SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
 [ -z "$SESSION_TOKEN" ] && SESSION_TOKEN=${AWS_SESSION_TOKEN}
 
-[ -z "$ACCESS_KEY_ID" ] && echo '[ Error: requires env variable: ACCESS_KEY_ID ]' && exit 1
-[ -z "$SECRET_ACCESS_KEY" ] && echo '[ Error: requires env variable: SECRET_ACCESS_KEY ]' && exit 1
+[ -z "$ACCESS_KEY_ID" ] && echo -e "[ ${RED_COLOR}Error${NO_COLOR}: requires env variable: ACCESS_KEY_ID ]" && exit 1
+[ -z "$SECRET_ACCESS_KEY" ] && echo -e "[ ${RED_COLOR}Error${NO_COLOR}: requires env variable: SECRET_ACCESS_KEY ]" && exit 1
 
 [ -z "$BIND_ADDRESS" ] && BIND_ADDRESS="localhost"
 [ -z "$BIND_PORT" ] && BIND_PORT="9200"
@@ -80,15 +84,20 @@ function execute() {
   export initialAdminPassword=$PASSWORD
   CLUSTER_SETTINGS="snapshot --assistant --security"
   CLUSTER_SETTINGS+=" -E plugins.ml_commons.only_run_on_ml_node=true"
+  CLUSTER_SETTINGS+=" -E plugins.ml_commons.memory_feature_enabled=true"
   
   run_opensearch || clean
   check_opensearch_status
   echo "[ Attempting to add models... ]"
   (add_model > $LOGS_DIR/add_model.log 2>&1 || clean) & 
+  echo "Results found in $LOGS_DIR/add_model.log"
 
   export OPENSEARCH_USERNAME=kibanaserver
   export OPENSEARCH_PASSWORD=kibanaserver
-  $CWD/scripts/use_node $CWD/scripts/opensearch_dashboards --dev --security || clean
+  echo "[ Starting OpenSearch Dashboards... ]"
+  OSD_SETTINGS="--dev --security --assistant.chat.enabled=true"
+  OSD_SETTINGS+=" --home.newHomepage=true"
+  eval "$CWD/scripts/use_node $CWD/scripts/opensearch_dashboards $OSD_SETTINGS" || clean
 }
 
 execute

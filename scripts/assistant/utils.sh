@@ -7,7 +7,7 @@ set -e
 
 # remove the running opensearch process
 function clean() {
-  echo "Attempt to Terminate Process with PID: ${PARENT_PID_LIST[*]}"
+  echo "[ Attempting to Terminate Process with PID: ${PARENT_PID_LIST[*]} ]"
   for pid_kill in "${PARENT_PID_LIST[@]}"
   do
     echo "Closing PID $pid_kill"
@@ -42,7 +42,7 @@ function check_status() {
     sleep 1
     # Stop checking after $check_status_end_time
     if [ $check_status_end_time -lt $(date '+%s') ]; then
-      echo "Error: Status check has timed out"
+      echo -e "[ ${RED_COLOR}Error${NO_COLOR}: Status check has timed out ]"
       exit 1
     fi
   done
@@ -52,14 +52,14 @@ function check_status() {
 # it calls check_status and passes the OpenSearch tmp file path, error msg, url, and arguments
 # if success, the while loop in the check_status will end and it prints out "OpenSearch is up!"
 function check_opensearch_status() {
-  echo "Checking the status OpenSearch..."
+  echo "[ Checking the status OpenSearch... ]"
   # define other paths and tmp files
   OPENSEARCH_FILE='opensearch.log'
   OPENSEARCH_LOG_PATH="$LOGS_DIR/$OPENSEARCH_FILE"
   
   OPENSEARCH_MSG="ML configuration initialized successfully"
   check_status $OPENSEARCH_LOG_PATH "$OPENSEARCH_MSG" 2>&1
-  echo "OpenSearch is up!" 
+  echo -e "[ ${GREEN_COLOR}Success${NO_COLOR}: OpenSearch is up! ]" 
 }
 
 # Starts OpenSearch

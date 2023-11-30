@@ -2,9 +2,8 @@
 set -e
 
 function add_model() {
-  echo $ACCESS_KEY_ID
   [ -z "$SESSION_TOKEN" ] && SESSION_TOKEN_VALUE="" || SESSION_TOKEN_VALUE='"session_token": "'$SESSION_TOKEN'"'
-  [ -z "$SESSION_TOKEN_VALUE" ] && echo "[ User session disabled ]" || echo "$SESSION_TOKEN_VALUE"
+  [ -z "$SESSION_TOKEN_VALUE" ] && echo "[ User session disabled ]"
 
   ENDPOINT=https://${USERNAME}:${PASSWORD}@${BIND_ADDRESS}:${BIND_PORT}
 
@@ -36,7 +35,7 @@ function add_model() {
     "credential": {
       "access_key": "'$ACCESS_KEY_ID'",
       "secret_key": "'$SECRET_ACCESS_KEY'",
-      '$SESSION_TOKEN_VALUE'
+      '"$SESSION_TOKEN_VALUE"'
     },
     "actions": [
       {

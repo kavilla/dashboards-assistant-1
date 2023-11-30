@@ -20,7 +20,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FormattedMessage } from '@osd/i18n/react';
 import { useDebounce, useObservable } from 'react-use';
 import cs from 'classnames';
-import { TAB_ID } from 'public/utils/constants';
+import { TAB_ID } from '../../utils';
 import { useChatActions } from '../../hooks/use_chat_actions';
 import { useChatContext } from '../../contexts/chat_context';
 import { useCore } from '../../contexts/core_context';
