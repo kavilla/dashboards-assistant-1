@@ -51,7 +51,7 @@ function add_model() {
       }
     ]
   }' | jq -r '.connector_id')
-  echo "❗connector: ${CONNECTOR}"
+  echo "Created connector id: ${CONNECTOR}"
 
   GROUP=$(curl -s -k "${ENDPOINT}/_plugins/_ml/model_groups/_register" -XPOST -H 'Content-Type: application/json' -d '{
       "name": "test_model_group_public",
