@@ -31,7 +31,7 @@ function clean() {
 }
 
 function spawn_process_and_save_PID() {
-    echo "Spawn '$@'"
+    echo "Spawn '$*'"
     eval $@
     curr_pid=$!
     echo "PID: $curr_pid"
