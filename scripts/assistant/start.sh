@@ -17,7 +17,7 @@ function usage() {
     echo "Optional arguments:"
     echo -e "-b BIND_ADDRESS\t, defaults to localhost | 127.0.0.1, can be changed to any IP or domain name for the cluster location."
     echo -e "-p BIND_PORT\t, defaults to 5601 depends on OpenSearch or Dashboards, can be changed to any port for the cluster location."
-    echo -e "-c CREDENTIAL\t(password), defaults to admin"
+    echo -e "-c CREDENTIAL\t(username:password), defaults to admin:admin"
     echo -e "-h\tPrint this message."
     echo "--------------------------------------------------------------------------"
 }
@@ -37,7 +37,7 @@ while getopts ":h:b:p:c:" arg; do
         c)
             CREDENTIAL=$OPTARG
             ;;
-        :)
+      :)
             echo "-${OPTARG} requires an argument"
             usage
             exit 1
@@ -49,10 +49,22 @@ while getopts ":h:b:p:c:" arg; do
     esac
 done
 
+[ -z "$ACCESS_KEY_ID" ] && ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+[ -z "$SECRET_ACCESS_KEY" ] && SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+[ -z "$SESSION_TOKEN" ] && SESSION_TOKEN=${AWS_SESSION_TOKEN}
+
+[ -z "$ACCESS_KEY_ID" ] && echo '[ Error: requires env variable: ACCESS_KEY_ID ]' && exit 1
+[ -z "$SECRET_ACCESS_KEY" ] && echo '[ Error: requires env variable: SECRET_ACCESS_KEY ]' && exit 1
+
 [ -z "$BIND_ADDRESS" ] && BIND_ADDRESS="localhost"
 [ -z "$BIND_PORT" ] && BIND_PORT="9200"
-[ -z "$CREDENTIAL" ] && CREDENTIAL="admin"
 [ -z "$REGION" ] && REGION="us-west-2"
+if [ -z "$CREDENTIAL" ]
+then
+  CREDENTIAL="admin:admin"
+  USERNAME=`echo $CREDENTIAL | awk -F ':' '{print $1}'`
+  PASSWORD=`echo $CREDENTIAL | awk -F ':' '{print $2}'`
+fi
 
 PARENT_PID_LIST=()
 
@@ -65,14 +77,13 @@ LOGS_DIR="$SNAPSHOT_DIR/$PACKAGE_VERSION/logs"
 
 # Main function
 function execute() {
-  export initialAdminPassword=$CREDENTIAL
+  export initialAdminPassword=$PASSWORD
   CLUSTER_SETTINGS="snapshot --assistant --security"
   CLUSTER_SETTINGS+=" -E plugins.ml_commons.only_run_on_ml_node=true"
   
   run_opensearch || clean
   check_opensearch_status
-  echo "Attempting to add models..."
-  echo "(Ensure your environment is exporting your credentials)"
+  echo "[ Attempting to add models... ]"
   (add_model > $LOGS_DIR/add_model.log 2>&1 || clean) & 
 
   export OPENSEARCH_USERNAME=kibanaserver

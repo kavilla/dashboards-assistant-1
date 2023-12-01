@@ -2,11 +2,11 @@
 set -e
 
 function add_model() {
-  [ -z "$ACCESS_KEY_ID" ] && ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-  [ -z "$SECRET_ACCESS_KEY" ] && SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-  [ -z "$SESSION_TOKEN" ] && SESSION_TOKEN=${AWS_SESSION_TOKEN}
+  echo $ACCESS_KEY_ID
+  [ -z "$SESSION_TOKEN" ] && SESSION_TOKEN_VALUE="" || SESSION_TOKEN_VALUE='"session_token": "'$SESSION_TOKEN'"'
+  [ -z "$SESSION_TOKEN_VALUE" ] && echo "[ User session disabled ]" || echo "$SESSION_TOKEN_VALUE"
 
-  ENDPOINT=https://admin:${CREDENTIAL}@${BIND_ADDRESS}:${BIND_PORT}
+  ENDPOINT=https://${USERNAME}:${PASSWORD}@${BIND_ADDRESS}:${BIND_PORT}
 
   curl -s -k "${ENDPOINT}/_cluster/settings" -XPUT -H 'Content-Type: application/json' -d '{
     "persistent" : {
@@ -36,7 +36,7 @@ function add_model() {
     "credential": {
       "access_key": "'$ACCESS_KEY_ID'",
       "secret_key": "'$SECRET_ACCESS_KEY'",
-      "session_token": "'$SESSION_TOKEN'"
+      '$SESSION_TOKEN_VALUE'
     },
     "actions": [
       {
@@ -57,7 +57,7 @@ function add_model() {
       "name": "test_model_group_public",
       "description": "This is a public model group"
   }' | jq | grep -oP '(?<=ID: )(.+)(?=\.)|(?<=model_group_id": ")(.+)(?=",)' | head -n 1)
-  echo "❗group: ${GROUP}"
+  echo "Created group id: ${GROUP}"
 
   EMBEDDINGS_TASK=$(curl -s -k "${ENDPOINT}/_plugins/_ml/models/_register?deploy=true" -XPOST -H 'Content-Type: application/json' -d '{
       "name": "huggingface/sentence-transformers/all-mpnet-base-v2",
@@ -65,7 +65,7 @@ function add_model() {
       "model_group_id": "'$GROUP'",
       "model_format": "TORCH_SCRIPT"
     }' | jq -r '.task_id')
-  echo "❗embeddings_task: ${EMBEDDINGS_TASK}"
+  echo "Created embeddings_task id: ${EMBEDDINGS_TASK}"
 
   MODEL=$(curl -s -k "${ENDPOINT}/_plugins/_ml/models/_register?deploy=true" -XPOST -H 'Content-Type: application/json' -d '{
       "name": "Claude model on bedrock",
@@ -76,10 +76,10 @@ function add_model() {
       "description": "test model"
     }' | jq -r '.model_id')
 
-  echo "❗model: ${MODEL}"
+  echo "Created model id: ${MODEL}"
   sleep 40
   EMBEDDINGS_MODEL=$(curl -s -k "${ENDPOINT}/_plugins/_ml/tasks/${EMBEDDINGS_TASK}" | jq -r '.model_id')
-  echo "❗embeddings_model: ${EMBEDDINGS_MODEL}"
+  echo "Created embeddings_model id: ${EMBEDDINGS_MODEL}"
 
   curl -s -k "${ENDPOINT}/.chat-assistant-config/_doc/model-config" -XPOST -H 'Content-Type: application/json' -d '{
     "model_type":"claude_bedrock",

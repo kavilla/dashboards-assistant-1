@@ -5,20 +5,6 @@
 
 set -e
 
-function open_artifact() {
-  artifact_dir=$1
-  artifact=$2
-  cd $artifact_dir
-
-  # check if artifact provided is URL or attempt if passing by absolute path
-  if curl -I -L $artifact; then
-    curl -L $artifact | tar -xz --strip-components=1
-  else
-    echo "Artifact is not a URL; attempting to unarchive a local file..."
-    tar -xf $artifact --strip-components=1
-  fi
-}
-
 # remove the running opensearch process
 function clean() {
   echo "Attempt to Terminate Process with PID: ${PARENT_PID_LIST[*]}"
@@ -48,8 +34,6 @@ function print_txt() {
 # this function is used to check the running status of OpenSearch or OpenSearch Dashboards
 # $1 is the path to the tmp file which saves the running status
 # $2 is the error msg to check
-# $3 is the url to curl
-# $4 contains arguments that need to be passed to the curl command
 function check_status() {
   # Calculate end time as 350s from now
   check_status_end_time=$(expr 350 + "$(date '+%s')")
